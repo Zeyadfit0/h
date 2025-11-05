@@ -397,18 +397,33 @@ const link = document.createElement('link'); link.rel='manifest'; link.href = ma
 document.head.appendChild(link);
 
 // service worker: simple caching for app shell (created dynamically)
-if('serviceWorker' in navigator){
+if ('serviceWorker' in navigator) {
   const swCode = `
     const CACHE = 'vault-cache-v1';
-    const urls = ['.'];
-    self.addEventListener('install', e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(urls)).then(()=>self.skipWaiting()));});
-    self.addEventListener('activate', e=>{ e.waitUntil(self.clients.claim()); });
-    self.addEventListener('fetch', e=>{ e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});
+    const urls = ['./', './index.html'];
+    self.addEventListener('install', e => {
+      e.waitUntil(
+        caches.open(CACHE)
+          .then(c => c.addAll(urls))
+          .then(() => self.skipWaiting())
+      );
+    });
+    self.addEventListener('activate', e => {
+      e.waitUntil(self.clients.claim());
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(
+        caches.match(e.request).then(r => r || fetch(e.request))
+      );
+    });
   `;
-  const blob = new Blob([swCode], {type:'application/javascript'});
+  const blob = new Blob([swCode], { type: 'application/javascript' });
   const swURL = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swURL).then(()=>console.log('sw registered')).catch(e=>console.warn('sw failed',e));
+  navigator.serviceWorker.register(swURL)
+    .then(() => console.log('SW registered'))
+    .catch(e => console.warn('SW failed', e));
 }
+
 
 /* ======= On page unload: try to persist (if unlocked) ======= */
 window.addEventListener('beforeunload', ()=> { persistEntries(); });
